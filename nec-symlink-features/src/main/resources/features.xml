@@ -1,0 +1,15 @@
+<features name="mapseq-pipeline-nec-symlink-${project.version}">
+
+  <feature name="mapseq-pipeline-nec-symlink" version="${project.version}" resolver="(obr)">
+    <bundle>mvn:edu.unc.mapseq.pipelines.nec-symlink/nec-symlink-workflow/${project.version}</bundle>
+    <bundle>mvn:edu.unc.mapseq.pipelines.nec-symlink/nec-symlink-commands/${project.version}</bundle>
+    <bundle start-level="100">mvn:edu.unc.mapseq.pipelines.nec-symlink/nec-symlink-executor/${project.version}</bundle>
+    <bundle start-level="100">mvn:edu.unc.mapseq.pipelines.nec-symlink/nec-symlink-messaging/${project.version}</bundle>
+  </feature>
+
+</features>
+
+
+
+
+
