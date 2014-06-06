@@ -1,5 +1,7 @@
 package edu.unc.mapseq.messaging;
 
+import java.io.IOException;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,10 +16,10 @@ import javax.xml.ws.Service;
 import javax.xml.ws.soap.SOAPBinding;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
-import org.codehaus.jettison.json.JSONArray;
-import org.codehaus.jettison.json.JSONException;
-import org.codehaus.jettison.json.JSONObject;
 import org.junit.Test;
+
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
 
 import edu.unc.mapseq.dao.model.HTSFSample;
 import edu.unc.mapseq.dao.model.SequencerRun;
@@ -111,41 +113,50 @@ public class NECSymlinkMessageTest {
 
     @Test
     public void testJSON() {
+
         try {
-            JSONObject jsonObject = new JSONObject();
-            jsonObject.put("account_name", "rc_renci.svc");
+            StringWriter sw = new StringWriter();
 
-            JSONArray entityArray = new JSONArray();
+            JsonGenerator generator = new JsonFactory().createGenerator(sw);
 
-            JSONObject htsfEntityObject = new JSONObject();
-            htsfEntityObject.put("entity_type", "HTSFSample");
-            htsfEntityObject.put("guid", "<some_sample_id>");
+            generator.writeStartObject();
+            generator.writeStringField("accountName", System.getProperty("user.name"));
+            generator.writeArrayFieldStart("entities");
 
-            JSONArray entityAttributeArray = new JSONArray();
+            generator.writeStartObject();
+            generator.writeStringField("entityType", "HTSFSample");
+            generator.writeStringField("guid", "<some_sample_id>");
+            generator.writeArrayFieldStart("attributes");
 
-            JSONObject htsfEntityAttributeObject = new JSONObject();
-            htsfEntityAttributeObject.put("name", "subjectName");
-            htsfEntityAttributeObject.put("value", "<some_subject_name>");
-            entityAttributeArray.put(htsfEntityAttributeObject);
+            generator.writeStartObject();
+            generator.writeStringField("name", "subjectName");
+            generator.writeStringField("value", "<some_subject_name>");
+            generator.writeEndObject();
 
-            htsfEntityAttributeObject = new JSONObject();
-            htsfEntityAttributeObject.put("name", "qcPass");
-            htsfEntityAttributeObject.put("value", "<true|false>");
-            entityAttributeArray.put(htsfEntityAttributeObject);
+            generator.writeStartObject();
+            generator.writeStringField("name", "qcPass");
+            generator.writeStringField("value", "<true|false>");
+            generator.writeEndObject();
 
-            htsfEntityObject.put("attributes", entityAttributeArray);
+            generator.writeEndArray();
+            generator.writeEndObject();
 
-            entityArray.put(htsfEntityObject);
+            generator.writeStartObject();
+            generator.writeStringField("entityType", "WorkflowRun");
+            generator.writeStringField("name", "<some_workflow_run_name>");
+            generator.writeEndObject();
 
-            JSONObject workflowRunEntityObject = new JSONObject();
-            workflowRunEntityObject.put("entity_type", "WorkflowRun");
-            workflowRunEntityObject.put("name", "<some_workflow_run_name>");
-            entityArray.put(workflowRunEntityObject);
+            generator.writeEndArray();
+            generator.writeEndObject();
 
-            jsonObject.put("entities", entityArray);
+            generator.flush();
+            generator.close();
 
-            System.out.println(jsonObject.toString());
-        } catch (JSONException e) {
+            sw.flush();
+            sw.close();
+
+            System.out.println(sw.toString());
+        } catch (IOException e) {
             e.printStackTrace();
         }
 
