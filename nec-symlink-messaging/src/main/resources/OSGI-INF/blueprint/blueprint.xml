@@ -7,10 +7,14 @@
   <reference id="NECSymlinkWorkflowBeanService" interface="edu.unc.mapseq.workflow.WorkflowBeanService"
     component-name="NECSymlinkWorkflowBeanService" />
 
-  <bean id="NECSymlinkMessagingService" class="edu.unc.mapseq.messaging.nec.symlink.NECSymlinkMessagingService"
+  <bean id="NECSymlinkMessageListener" class="edu.unc.mapseq.messaging.nec.symlink.NECSymlinkMessageListener">
+    <property name="workflowBeanService" ref="NECSymlinkWorkflowBeanService" />
+  </bean>
+
+  <bean id="NECSymlinkMessageService" class="edu.unc.mapseq.messaging.nec.symlink.NECSymlinkMessageService"
     init-method="start" destroy-method="stop" activation="eager">
     <property name="connectionFactory" ref="connectionFactory" />
-    <property name="workflowBeanService" ref="NECSymlinkWorkflowBeanService" />
+    <property name="messageListener" ref="NECSymlinkMessageListener" />
     <property name="destinationName" value="queue/nec.symlink" />
   </bean>
 
