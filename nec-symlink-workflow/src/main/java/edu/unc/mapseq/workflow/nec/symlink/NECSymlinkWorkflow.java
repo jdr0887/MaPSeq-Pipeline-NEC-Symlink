@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import edu.unc.mapseq.dao.model.EntityAttribute;
 import edu.unc.mapseq.dao.model.HTSFSample;
 import edu.unc.mapseq.dao.model.SequencerRun;
+import edu.unc.mapseq.dao.model.WorkflowRun;
 import edu.unc.mapseq.module.core.BatchSymlinkCLI;
 import edu.unc.mapseq.module.core.SymlinkCLI;
 import edu.unc.mapseq.workflow.WorkflowException;
@@ -66,6 +67,8 @@ public class NECSymlinkWorkflow extends AbstractWorkflow {
 
         logger.info("cohortDirectory.getAbsolutePath(): {}", cohortDirectory.getAbsolutePath());
 
+        WorkflowRun workflowRun = getWorkflowPlan().getWorkflowRun();
+
         for (HTSFSample htsfSample : htsfSampleSet) {
 
             if ("Undetermined".equals(htsfSample.getBarcode())) {
@@ -77,20 +80,21 @@ public class NECSymlinkWorkflow extends AbstractWorkflow {
             String subjectName = null;
             boolean qcPass = false;
 
-            Set<EntityAttribute> attributeSet = htsfSample.getAttributes();
-            Iterator<EntityAttribute> attributeIter = attributeSet.iterator();
-            while (attributeIter.hasNext()) {
-                EntityAttribute attribute = attributeIter.next();
-                String name = attribute.getName();
-                String value = attribute.getValue();
-                if ("subjectName".equals(name)) {
-                    subjectName = value;
-                }
-                if ("qcPass".equals(name) && StringUtils.isNotEmpty(value) && "true".equalsIgnoreCase(value)) {
-                    qcPass = true;
+            Set<EntityAttribute> attributeSet = workflowRun.getAttributes();
+            if (attributeSet != null && !attributeSet.isEmpty()) {
+                Iterator<EntityAttribute> attributeIter = attributeSet.iterator();
+                while (attributeIter.hasNext()) {
+                    EntityAttribute attribute = attributeIter.next();
+                    String name = attribute.getName();
+                    String value = attribute.getValue();
+                    if ("subjectName".equals(name)) {
+                        subjectName = value;
+                    }
+                    if ("qcPass".equals(name) && StringUtils.isNotEmpty(value) && "true".equalsIgnoreCase(value)) {
+                        qcPass = true;
+                    }
                 }
             }
-
             if (StringUtils.isEmpty(subjectName)) {
                 throw new WorkflowException("invalid subjectName");
             }
