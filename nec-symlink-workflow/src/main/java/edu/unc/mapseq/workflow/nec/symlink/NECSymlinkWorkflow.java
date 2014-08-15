@@ -17,18 +17,19 @@ import org.renci.jlrm.condor.CondorJobEdge;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import edu.unc.mapseq.dao.model.EntityAttribute;
-import edu.unc.mapseq.dao.model.HTSFSample;
-import edu.unc.mapseq.dao.model.SequencerRun;
+import edu.unc.mapseq.dao.model.Attribute;
+import edu.unc.mapseq.dao.model.Flowcell;
+import edu.unc.mapseq.dao.model.Sample;
 import edu.unc.mapseq.dao.model.WorkflowRun;
+import edu.unc.mapseq.dao.model.WorkflowRunAttempt;
 import edu.unc.mapseq.module.core.BatchSymlinkCLI;
 import edu.unc.mapseq.module.core.SymlinkCLI;
 import edu.unc.mapseq.workflow.WorkflowException;
 import edu.unc.mapseq.workflow.WorkflowUtil;
-import edu.unc.mapseq.workflow.impl.AbstractWorkflow;
+import edu.unc.mapseq.workflow.impl.AbstractSampleWorkflow;
 import edu.unc.mapseq.workflow.impl.WorkflowJobFactory;
 
-public class NECSymlinkWorkflow extends AbstractWorkflow {
+public class NECSymlinkWorkflow extends AbstractSampleWorkflow {
 
     private final Logger logger = LoggerFactory.getLogger(NECSymlinkWorkflow.class);
 
@@ -57,8 +58,8 @@ public class NECSymlinkWorkflow extends AbstractWorkflow {
 
         int count = 0;
 
-        Set<HTSFSample> htsfSampleSet = getAggregateHTSFSampleSet();
-        logger.info("htsfSampleSet.size(): {}", htsfSampleSet.size());
+        Set<Sample> sampleSet = getAggregatedSamples();
+        logger.info("sampleSet.size(): {}", sampleSet.size());
 
         String siteName = getWorkflowBeanService().getAttributes().get("siteName");
         String saHome = getWorkflowBeanService().getAttributes().get("sequenceAnalysisHome");
@@ -67,24 +68,25 @@ public class NECSymlinkWorkflow extends AbstractWorkflow {
 
         logger.info("cohortDirectory.getAbsolutePath(): {}", cohortDirectory.getAbsolutePath());
 
-        WorkflowRun workflowRun = getWorkflowPlan().getWorkflowRun();
+        WorkflowRunAttempt attempt = getWorkflowRunAttempt();
+        WorkflowRun workflowRun = attempt.getWorkflowRun();
 
-        for (HTSFSample htsfSample : htsfSampleSet) {
+        for (Sample sample : sampleSet) {
 
-            if ("Undetermined".equals(htsfSample.getBarcode())) {
+            if ("Undetermined".equals(sample.getBarcode())) {
                 continue;
             }
 
-            logger.info("htsfSample: {}", htsfSample.toString());
+            logger.info(sample.toString());
 
             String subjectName = null;
             boolean qcPass = false;
 
-            Set<EntityAttribute> attributeSet = workflowRun.getAttributes();
+            Set<Attribute> attributeSet = workflowRun.getAttributes();
             if (attributeSet != null && !attributeSet.isEmpty()) {
-                Iterator<EntityAttribute> attributeIter = attributeSet.iterator();
+                Iterator<Attribute> attributeIter = attributeSet.iterator();
                 while (attributeIter.hasNext()) {
-                    EntityAttribute attribute = attributeIter.next();
+                    Attribute attribute = attributeIter.next();
                     String name = attribute.getName();
                     String value = attribute.getValue();
                     if ("subjectName".equals(name)) {
@@ -99,13 +101,13 @@ public class NECSymlinkWorkflow extends AbstractWorkflow {
                 throw new WorkflowException("invalid subjectName");
             }
 
-            SequencerRun sequencerRun = htsfSample.getSequencerRun();
-            File outputDirectory = createOutputDirectory(sequencerRun.getName(), htsfSample,
-                    getName().replace("Symlink", ""), getVersion());
+            Flowcell flowcell = sample.getFlowcell();
+            File outputDirectory = new File(sample.getOutputDirectory());
+
             logger.info("outputDirectory.getAbsolutePath() = {}", outputDirectory.getAbsolutePath());
 
-            List<File> readPairList = WorkflowUtil.getReadPairList(htsfSample.getFileDatas(), sequencerRun.getName(),
-                    htsfSample.getLaneIndex());
+            List<File> readPairList = WorkflowUtil.getReadPairList(sample.getFileDatas(), flowcell.getName(),
+                    sample.getLaneIndex());
 
             // error check
             if (readPairList.size() != 2) {
@@ -155,7 +157,7 @@ public class NECSymlinkWorkflow extends AbstractWorkflow {
                 if (!qcPass) {
 
                     CondorJobBuilder builder = WorkflowJobFactory.createJob(++count, SymlinkCLI.class,
-                            getWorkflowPlan(), htsfSample).siteName(siteName);
+                            getWorkflowRunAttempt(), sample).siteName(siteName);
                     builder.addArgument(SymlinkCLI.TARGET, outputDirectory.getAbsolutePath())
                             .addArgument(SymlinkCLI.LINK, qcFailProjDirectory.getAbsolutePath())
                             .addArgument(SymlinkCLI.SLEEPDURATION, "3");
@@ -214,7 +216,7 @@ public class NECSymlinkWorkflow extends AbstractWorkflow {
 
                 // new job
                 CondorJobBuilder builder = WorkflowJobFactory.createJob(++count, BatchSymlinkCLI.class,
-                        getWorkflowPlan(), htsfSample).siteName(siteName);
+                        getWorkflowRunAttempt(), sample).siteName(siteName);
                 for (String targetLinkPair : targetLinkPairList) {
                     builder.addArgument(BatchSymlinkCLI.TARGETLINKPAIR, targetLinkPair);
                 }
