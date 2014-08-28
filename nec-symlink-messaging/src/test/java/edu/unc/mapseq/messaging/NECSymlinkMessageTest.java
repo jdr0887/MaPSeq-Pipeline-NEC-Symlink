@@ -39,7 +39,7 @@ public class NECSymlinkMessageTest {
             Destination destination = session.createQueue("queue/nec.symlink");
             MessageProducer producer = session.createProducer(destination);
             producer.setDeliveryMode(DeliveryMode.PERSISTENT);
-            String format = "{\"entities\":[{\"entity_type\":\"Sample\",\"guid\":\"%d\"},{\"entity_type\":\"WorkflowRun\",\"name\":\"%s-%d\"}]}";
+            String format = "{\"entities\":[{\"entityType\":\"Sample\",\"id\":\"%d\"},{\"entityType\":\"WorkflowRun\",\"name\":\"%s-%d\"}]}";
             producer.send(session.createTextMessage(String.format(format, "rc_renci.svc", 67401,
                     "jdr-test-nec-variant-calling", 67401)));
         } catch (JMSException e) {
@@ -68,11 +68,11 @@ public class NECSymlinkMessageTest {
 
         sampleList.addAll(sampleService.findByFlowcellId(191541L));
         sampleList.addAll(sampleService.findByFlowcellId(191738L));
-        // sampleList.addAll(htsfSampleService.findBySequencerRunId(190345L));
-        // sampleList.addAll(htsfSampleService.findBySequencerRunId(190520L));
-        // sampleList.addAll(htsfSampleService.findBySequencerRunId(191372L));
-        // sampleList.addAll(htsfSampleService.findBySequencerRunId(192405L));
-        // sampleList.addAll(htsfSampleService.findBySequencerRunId(191192L));
+        // sampleList.addAll(sampleService.findByFlowcellId(190345L));
+        // sampleList.addAll(sampleService.findByFlowcellId(190520L));
+        // sampleList.addAll(sampleService.findByFlowcellId(191372L));
+        // sampleList.addAll(sampleService.findByFlowcellId(192405L));
+        // sampleList.addAll(sampleService.findByFlowcellId(191192L));
 
         ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(String.format("nio://%s:61616",
                 "biodev2.its.unc.edu"));
@@ -84,7 +84,7 @@ public class NECSymlinkMessageTest {
             Destination destination = session.createQueue("queue/nec.symlink");
             MessageProducer producer = session.createProducer(destination);
             producer.setDeliveryMode(DeliveryMode.PERSISTENT);
-            String format = "{\"account_name\":\"%s\",\"entities\":[{\"entity_type\":\"HTSFSample\",\"guid\":\"%d\"},{\"entity_type\":\"WorkflowRun\",\"name\":\"%s_L%d_%s_GATK\"}]}";
+            String format = "{\"entities\":[{\"entityType\":\"Sample\",\"id\":\"%d\"},{\"entityType\":\"WorkflowRun\",\"name\":\"%s_L%d_%s_GATK\"}]}";
             for (Sample sample : sampleList) {
 
                 if ("Undetermined".equals(sample.getBarcode())) {
@@ -92,7 +92,7 @@ public class NECSymlinkMessageTest {
                 }
 
                 Flowcell flowcell = sample.getFlowcell();
-                String message = String.format(format, "rc_renci.svc", sample.getId(), flowcell.getName(),
+                String message = String.format(format, sample.getId(), flowcell.getName(),
                         sample.getLaneIndex(), sample.getName());
                 System.out.println(message);
                 producer.send(session.createTextMessage(message));
@@ -120,12 +120,11 @@ public class NECSymlinkMessageTest {
             JsonGenerator generator = new JsonFactory().createGenerator(sw);
 
             generator.writeStartObject();
-            generator.writeStringField("accountName", System.getProperty("user.name"));
             generator.writeArrayFieldStart("entities");
 
             generator.writeStartObject();
-            generator.writeStringField("entityType", "HTSFSample");
-            generator.writeStringField("guid", "<some_sample_id>");
+            generator.writeStringField("entityType", "Sample");
+            generator.writeStringField("id", "<some_sample_id>");
             generator.writeArrayFieldStart("attributes");
 
             generator.writeStartObject();
