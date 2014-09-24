@@ -92,8 +92,8 @@ public class NECSymlinkMessageTest {
                 }
 
                 Flowcell flowcell = sample.getFlowcell();
-                String message = String.format(format, sample.getId(), flowcell.getName(),
-                        sample.getLaneIndex(), sample.getName());
+                String message = String.format(format, sample.getId(), flowcell.getName(), sample.getLaneIndex(),
+                        sample.getName());
                 System.out.println(message);
                 producer.send(session.createTextMessage(message));
             }
