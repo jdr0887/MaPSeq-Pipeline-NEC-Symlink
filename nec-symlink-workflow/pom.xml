@@ -2,13 +2,13 @@
   <parent>
     <groupId>edu.unc.mapseq.pipelines</groupId>
     <artifactId>nec-symlink</artifactId>
-    <version>0.5.4</version>
+    <version>0.5.5-SNAPSHOT</version>
   </parent>
   <name>MaPSeq :: Pipelines :: NEC Symlink :: Workflow</name>
   <modelVersion>4.0.0</modelVersion>
   <groupId>edu.unc.mapseq.pipelines.nec-symlink</groupId>
   <artifactId>nec-symlink-workflow</artifactId>
-  <version>0.5.4</version>
+  <version>0.5.5-SNAPSHOT</version>
   <packaging>bundle</packaging>
   <dependencies>
     <dependency>
