@@ -158,7 +158,7 @@ public class NECSymlinkWorkflow extends AbstractSampleWorkflow {
                 // don't link all files, just the analysis directory
                 if (!qcPass) {
 
-                    CondorJobBuilder builder = WorkflowJobFactory.createJob(++count, SymlinkCLI.class, attempt)
+                    CondorJobBuilder builder = WorkflowJobFactory.createJob(++count, SymlinkCLI.class, attempt.getId())
                             .siteName(siteName);
                     builder.addArgument(SymlinkCLI.TARGET, outputDirectory.getAbsolutePath())
                             .addArgument(SymlinkCLI.LINK, qcFailProjDirectory.getAbsolutePath())
@@ -217,8 +217,8 @@ public class NECSymlinkWorkflow extends AbstractSampleWorkflow {
                 }
 
                 // new job
-                CondorJobBuilder builder = WorkflowJobFactory.createJob(++count, BatchSymlinkCLI.class, attempt)
-                        .siteName(siteName);
+                CondorJobBuilder builder = WorkflowJobFactory
+                        .createJob(++count, BatchSymlinkCLI.class, attempt.getId()).siteName(siteName);
                 for (String targetLinkPair : targetLinkPairList) {
                     builder.addArgument(BatchSymlinkCLI.TARGETLINKPAIR, targetLinkPair);
                 }
