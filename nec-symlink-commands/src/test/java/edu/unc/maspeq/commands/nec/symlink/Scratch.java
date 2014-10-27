@@ -2,7 +2,9 @@ package edu.unc.maspeq.commands.nec.symlink;
 
 import static org.junit.Assert.assertTrue;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
 
 import org.apache.commons.io.IOUtils;
@@ -22,4 +24,21 @@ public class Scratch {
         }
 
     }
+    
+
+    @Test
+    public void testSymlink() {
+        File link = new File("/home/jdr0887/tmp/canvas", "condor.dag.linked");
+        File target = new File("/home/jdr0887/tmp", "condor.dag");
+        
+        try {
+            System.out.println(link.toPath().getParent().toRealPath());
+            Files.deleteIfExists(link.toPath());
+            Files.createSymbolicLink(link.toPath(), target.toPath());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+    
 }
