@@ -1,6 +1,8 @@
 package edu.unc.mapseq.commands.nec.symlink;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
@@ -43,8 +45,12 @@ public class MigrateNECSymlinkAction extends AbstractAction {
         FlowcellDAO flowcellDAO = maPSeqDAOBean.getFlowcellDAO();
         StudyDAO studyDAO = maPSeqDAOBean.getStudyDAO();
         SampleDAO sampleDAO = maPSeqDAOBean.getSampleDAO();
+        BufferedWriter restorationScript = null;
 
         try {
+
+            restorationScript = new BufferedWriter(new FileWriter(new File("/tmp", "mpsSymlink.sh")));
+
             List<Flowcell> flowcells = flowcellDAO.findAll();
 
             List<String> lines = IOUtils.readLines(getClass().getClassLoader().getResourceAsStream(
@@ -104,7 +110,7 @@ public class MigrateNECSymlinkAction extends AbstractAction {
                             // error check
                             if (readPairList.size() != 2) {
                                 logger.warn("readPairList.size(): {}", readPairList.size());
-                                return null;
+                                continue;
                             }
 
                             // fastq file names
@@ -155,6 +161,13 @@ public class MigrateNECSymlinkAction extends AbstractAction {
                                 File fastqR1Symlink = new File(sequenceProjDirectory, r1FastqFile.getName());
                                 logger.info(String.format("linking %s to %s", r1FastqFile.getAbsolutePath(),
                                         fastqR1Symlink.getAbsolutePath()));
+
+                                restorationScript.write(String.format("rm %s; ln -s %s %s",
+                                        fastqR1Symlink.getAbsolutePath(), r1FastqFile.getAbsolutePath(), fastqR1Symlink
+                                                .toPath().getParent().toRealPath()));
+                                restorationScript.newLine();
+                                restorationScript.flush();
+
                                 if (!dryRun) {
                                     Files.deleteIfExists(fastqR1Symlink.toPath());
                                     Files.createSymbolicLink(fastqR1Symlink.toPath(), r1FastqFile.toPath());
@@ -163,6 +176,11 @@ public class MigrateNECSymlinkAction extends AbstractAction {
                                 File fastqR2Symlink = new File(sequenceProjDirectory, r2FastqFile.getName());
                                 logger.info(String.format("linking %s to %s", r2FastqFile.getAbsolutePath(),
                                         fastqR2Symlink.getAbsolutePath()));
+                                restorationScript.write(String.format("rm %s; ln -s %s %s",
+                                        fastqR1Symlink.getAbsolutePath(), r1FastqFile.getAbsolutePath(), fastqR1Symlink
+                                                .toPath().getParent().toRealPath()));
+                                restorationScript.newLine();
+                                restorationScript.flush();
                                 if (!dryRun) {
                                     Files.deleteIfExists(fastqR2Symlink.toPath());
                                     Files.createSymbolicLink(fastqR2Symlink.toPath(), r2FastqFile.toPath());
@@ -170,53 +188,80 @@ public class MigrateNECSymlinkAction extends AbstractAction {
                                 // cycle through all files in the analysisWorkflowDirectory
                                 File necOutputDir = new File(sample.getOutputDirectory(), "NEC");
 
-                                for (File f : necOutputDir.listFiles()) {
-                                    String fname = f.getName();
+                                for (File target : necOutputDir.listFiles()) {
+                                    String fname = target.getName();
 
                                     if (fname.endsWith("fastqc.zip")) {
 
-                                        File targetFile = new File(sequenceProjDirectory, fname);
-                                        logger.info(String.format("linking %s to %s", targetFile.getAbsolutePath(),
-                                                f.getAbsolutePath()));
+                                        File link = new File(sequenceProjDirectory, fname);
+                                        logger.info(String.format("linking %s to %s", target.getAbsolutePath(),
+                                                link.getAbsolutePath()));
+
+                                        restorationScript.write(String.format("rm %s; ln -s %s %s",
+                                                link.getAbsolutePath(), r1FastqFile.getAbsolutePath(), link.toPath()
+                                                        .getParent().toRealPath()));
+                                        restorationScript.newLine();
+                                        restorationScript.flush();
+
                                         if (!dryRun) {
-                                            Files.deleteIfExists(f.toPath());
-                                            Files.createSymbolicLink(f.toPath(), targetFile.toPath());
+                                            Files.deleteIfExists(link.toPath());
+                                            Files.createSymbolicLink(link.toPath(), target.toPath());
                                         }
                                     } else if (fname.endsWith("fixed-rg.bam") || fname.endsWith("fixed-rg.bai")) {
 
-                                        File targetFile = new File(alignmentProjDirectory, fname);
-                                        logger.info(String.format("linking %s to %s", targetFile.getAbsolutePath(),
-                                                f.getAbsolutePath()));
+                                        File link = new File(alignmentProjDirectory, fname);
+                                        logger.info(String.format("linking %s to %s", target.getAbsolutePath(),
+                                                link.getAbsolutePath()));
+                                        restorationScript.write(String.format("rm %s; ln -s %s %s",
+                                                link.getAbsolutePath(), r1FastqFile.getAbsolutePath(), link.toPath()
+                                                        .getParent().toRealPath()));
+                                        restorationScript.newLine();
+                                        restorationScript.flush();
                                         if (!dryRun) {
-                                            Files.deleteIfExists(f.toPath());
-                                            Files.createSymbolicLink(f.toPath(), targetFile.toPath());
+                                            Files.deleteIfExists(link.toPath());
+                                            Files.createSymbolicLink(link.toPath(), target.toPath());
                                         }
                                     } else if (fname.contains(".coverage.") || fname.endsWith("flagstat")) {
 
-                                        File targetFile = new File(alignmentStatProjDirectory, fname);
-                                        logger.info(String.format("linking %s to %s", targetFile.getAbsolutePath(),
-                                                f.getAbsolutePath()));
+                                        File link = new File(alignmentStatProjDirectory, fname);
+                                        logger.info(String.format("linking %s to %s", target.getAbsolutePath(),
+                                                link.getAbsolutePath()));
+                                        restorationScript.write(String.format("rm %s; ln -s %s %s",
+                                                link.getAbsolutePath(), r1FastqFile.getAbsolutePath(), link.toPath()
+                                                        .getParent().toRealPath()));
+                                        restorationScript.newLine();
+                                        restorationScript.flush();
                                         if (!dryRun) {
-                                            Files.deleteIfExists(f.toPath());
-                                            Files.createSymbolicLink(f.toPath(), targetFile.toPath());
+                                            Files.deleteIfExists(link.toPath());
+                                            Files.createSymbolicLink(link.toPath(), target.toPath());
                                         }
                                     } else if (fname.endsWith("fvcf")) {
 
-                                        File targetFile = new File(idchkFVCFProjDirectory, fname);
-                                        logger.info(String.format("linking %s to %s", targetFile.getAbsolutePath(),
-                                                f.getAbsolutePath()));
+                                        File link = new File(idchkFVCFProjDirectory, fname);
+                                        logger.info(String.format("linking %s to %s", target.getAbsolutePath(),
+                                                link.getAbsolutePath()));
+                                        restorationScript.write(String.format("rm %s; ln -s %s %s",
+                                                link.getAbsolutePath(), r1FastqFile.getAbsolutePath(), link.toPath()
+                                                        .getParent().toRealPath()));
+                                        restorationScript.newLine();
+                                        restorationScript.flush();
                                         if (!dryRun) {
-                                            Files.deleteIfExists(f.toPath());
-                                            Files.createSymbolicLink(f.toPath(), targetFile.toPath());
+                                            Files.deleteIfExists(link.toPath());
+                                            Files.createSymbolicLink(link.toPath(), target.toPath());
                                         }
                                     } else if (fname.endsWith("ec.tsv")) {
 
-                                        File targetFile = new File(idchkECProjDirectory, fname);
-                                        logger.info(String.format("linking %s to %s", targetFile.getAbsolutePath(),
-                                                f.getAbsolutePath()));
+                                        File link = new File(idchkECProjDirectory, fname);
+                                        logger.info(String.format("linking %s to %s", target.getAbsolutePath(),
+                                                link.getAbsolutePath()));
+                                        restorationScript.write(String.format("rm %s; ln -s %s %s",
+                                                link.getAbsolutePath(), r1FastqFile.getAbsolutePath(), link.toPath()
+                                                        .getParent().toRealPath()));
+                                        restorationScript.newLine();
+                                        restorationScript.flush();
                                         if (!dryRun) {
-                                            Files.deleteIfExists(f.toPath());
-                                            Files.createSymbolicLink(f.toPath(), targetFile.toPath());
+                                            Files.deleteIfExists(link.toPath());
+                                            Files.createSymbolicLink(link.toPath(), target.toPath());
                                         }
                                     }
 
@@ -233,8 +278,18 @@ public class MigrateNECSymlinkAction extends AbstractAction {
                 }
 
             }
+
         } catch (MaPSeqDAOException | IOException e) {
             e.printStackTrace();
+        } finally {
+            if (restorationScript != null) {
+                try {
+                    restorationScript.flush();
+                    restorationScript.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
         }
 
         return null;
