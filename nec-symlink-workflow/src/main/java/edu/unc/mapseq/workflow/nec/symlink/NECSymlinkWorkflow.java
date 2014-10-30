@@ -102,7 +102,7 @@ public class NECSymlinkWorkflow extends AbstractSampleWorkflow {
             }
 
             Flowcell flowcell = sample.getFlowcell();
-            File outputDirectory = new File(sample.getOutputDirectory(), getName());
+            File outputDirectory = new File(sample.getOutputDirectory(), "NEC");
             File tmpDirectory = new File(outputDirectory, "tmp");
             tmpDirectory.mkdirs();
 
