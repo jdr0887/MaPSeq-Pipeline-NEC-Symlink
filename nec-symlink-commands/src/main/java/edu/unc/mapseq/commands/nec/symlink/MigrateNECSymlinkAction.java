@@ -162,7 +162,7 @@ public class MigrateNECSymlinkAction extends AbstractAction {
                                 logger.info(String.format("linking %s to %s", r1FastqFile.getAbsolutePath(),
                                         fastqR1Symlink.getAbsolutePath()));
 
-                                restorationScript.write(String.format("rm %s; ln -s %s %s",
+                                restorationScript.write(String.format("rm %s;%nln -s %s %s",
                                         fastqR1Symlink.getAbsolutePath(), r1FastqFile.getAbsolutePath(), fastqR1Symlink
                                                 .toPath().getParent().toRealPath()));
                                 restorationScript.newLine();
@@ -176,7 +176,7 @@ public class MigrateNECSymlinkAction extends AbstractAction {
                                 File fastqR2Symlink = new File(sequenceProjDirectory, r2FastqFile.getName());
                                 logger.info(String.format("linking %s to %s", r2FastqFile.getAbsolutePath(),
                                         fastqR2Symlink.getAbsolutePath()));
-                                restorationScript.write(String.format("rm %s; ln -s %s %s",
+                                restorationScript.write(String.format("rm %s;%nln -s %s %s",
                                         fastqR1Symlink.getAbsolutePath(), r1FastqFile.getAbsolutePath(), fastqR1Symlink
                                                 .toPath().getParent().toRealPath()));
                                 restorationScript.newLine();
@@ -197,7 +197,7 @@ public class MigrateNECSymlinkAction extends AbstractAction {
                                         logger.info(String.format("linking %s to %s", target.getAbsolutePath(),
                                                 link.getAbsolutePath()));
 
-                                        restorationScript.write(String.format("rm %s; ln -s %s %s",
+                                        restorationScript.write(String.format("rm %s;%nln -s %s %s",
                                                 link.getAbsolutePath(), r1FastqFile.getAbsolutePath(), link.toPath()
                                                         .getParent().toRealPath()));
                                         restorationScript.newLine();
@@ -212,7 +212,7 @@ public class MigrateNECSymlinkAction extends AbstractAction {
                                         File link = new File(alignmentProjDirectory, fname);
                                         logger.info(String.format("linking %s to %s", target.getAbsolutePath(),
                                                 link.getAbsolutePath()));
-                                        restorationScript.write(String.format("rm %s; ln -s %s %s",
+                                        restorationScript.write(String.format("rm %s;%nln -s %s %s",
                                                 link.getAbsolutePath(), r1FastqFile.getAbsolutePath(), link.toPath()
                                                         .getParent().toRealPath()));
                                         restorationScript.newLine();
@@ -226,7 +226,7 @@ public class MigrateNECSymlinkAction extends AbstractAction {
                                         File link = new File(alignmentStatProjDirectory, fname);
                                         logger.info(String.format("linking %s to %s", target.getAbsolutePath(),
                                                 link.getAbsolutePath()));
-                                        restorationScript.write(String.format("rm %s; ln -s %s %s",
+                                        restorationScript.write(String.format("rm %s;%nln -s %s %s",
                                                 link.getAbsolutePath(), r1FastqFile.getAbsolutePath(), link.toPath()
                                                         .getParent().toRealPath()));
                                         restorationScript.newLine();
@@ -240,7 +240,7 @@ public class MigrateNECSymlinkAction extends AbstractAction {
                                         File link = new File(idchkFVCFProjDirectory, fname);
                                         logger.info(String.format("linking %s to %s", target.getAbsolutePath(),
                                                 link.getAbsolutePath()));
-                                        restorationScript.write(String.format("rm %s; ln -s %s %s",
+                                        restorationScript.write(String.format("rm %s;%nln -s %s %s",
                                                 link.getAbsolutePath(), r1FastqFile.getAbsolutePath(), link.toPath()
                                                         .getParent().toRealPath()));
                                         restorationScript.newLine();
@@ -254,7 +254,7 @@ public class MigrateNECSymlinkAction extends AbstractAction {
                                         File link = new File(idchkECProjDirectory, fname);
                                         logger.info(String.format("linking %s to %s", target.getAbsolutePath(),
                                                 link.getAbsolutePath()));
-                                        restorationScript.write(String.format("rm %s; ln -s %s %s",
+                                        restorationScript.write(String.format("rm %s;%nln -s %s %s",
                                                 link.getAbsolutePath(), r1FastqFile.getAbsolutePath(), link.toPath()
                                                         .getParent().toRealPath()));
                                         restorationScript.newLine();
