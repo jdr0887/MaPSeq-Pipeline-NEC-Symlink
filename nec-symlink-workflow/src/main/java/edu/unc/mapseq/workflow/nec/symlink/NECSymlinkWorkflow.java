@@ -102,11 +102,10 @@ public class NECSymlinkWorkflow extends AbstractSampleWorkflow {
             }
 
             Flowcell flowcell = sample.getFlowcell();
-            File outputDirectory = new File(sample.getOutputDirectory(), "NEC");
-            File tmpDirectory = new File(outputDirectory, "tmp");
+            File necAlignmentDirectory = new File(sample.getOutputDirectory(), "NECAlignment");
+            File necVariantCallingDirectory = new File(sample.getOutputDirectory(), "NECVariantCalling");
+            File tmpDirectory = new File(sample.getOutputDirectory(), "tmp");
             tmpDirectory.mkdirs();
-
-            logger.info("outputDirectory.getAbsolutePath() = {}", outputDirectory.getAbsolutePath());
 
             List<File> readPairList = WorkflowUtil.getReadPairList(sample.getFileDatas(), flowcell.getName(),
                     sample.getLaneIndex());
@@ -160,7 +159,7 @@ public class NECSymlinkWorkflow extends AbstractSampleWorkflow {
 
                     CondorJobBuilder builder = WorkflowJobFactory.createJob(++count, SymlinkCLI.class, attempt.getId())
                             .siteName(siteName);
-                    builder.addArgument(SymlinkCLI.TARGET, outputDirectory.getAbsolutePath())
+                    builder.addArgument(SymlinkCLI.TARGET, sample.getOutputDirectory())
                             .addArgument(SymlinkCLI.LINK, qcFailProjDirectory.getAbsolutePath())
                             .addArgument(SymlinkCLI.SLEEPDURATION, "3");
                     CondorJob job = builder.build();
@@ -179,7 +178,7 @@ public class NECSymlinkWorkflow extends AbstractSampleWorkflow {
                         fastqR2Symlink.getAbsolutePath()));
 
                 // cycle through all files in the analysisWorkflowDirectory
-                for (File f : outputDirectory.listFiles()) {
+                for (File f : necAlignmentDirectory.listFiles()) {
                     String fname = f.getName();
 
                     if (fname.endsWith("fastqc.zip")) {
@@ -194,7 +193,13 @@ public class NECSymlinkWorkflow extends AbstractSampleWorkflow {
                         targetLinkPairList
                                 .add(String.format(format, f.getAbsolutePath(), targetFile.getAbsolutePath()));
 
-                    } else if (fname.contains(".coverage.") || fname.endsWith("flagstat")) {
+		    }
+                }
+
+                for (File f : necVariantCallingDirectory.listFiles()) {
+                    String fname = f.getName();
+                    
+		    if (fname.contains(".coverage.") || fname.endsWith("flagstat")) {
 
                         File targetFile = new File(alignmentStatProjDirectory, fname);
                         targetLinkPairList
