@@ -18,14 +18,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.unc.mapseq.dao.model.Attribute;
-import edu.unc.mapseq.dao.model.Flowcell;
+import edu.unc.mapseq.dao.model.FileData;
+import edu.unc.mapseq.dao.model.MimeType;
 import edu.unc.mapseq.dao.model.Sample;
 import edu.unc.mapseq.dao.model.WorkflowRun;
 import edu.unc.mapseq.dao.model.WorkflowRunAttempt;
 import edu.unc.mapseq.module.core.BatchSymlinkCLI;
 import edu.unc.mapseq.module.core.SymlinkCLI;
 import edu.unc.mapseq.workflow.WorkflowException;
-import edu.unc.mapseq.workflow.WorkflowUtil;
 import edu.unc.mapseq.workflow.impl.AbstractSampleWorkflow;
 import edu.unc.mapseq.workflow.impl.WorkflowJobFactory;
 
@@ -101,24 +101,11 @@ public class NECSymlinkWorkflow extends AbstractSampleWorkflow {
                 throw new WorkflowException("invalid subjectName");
             }
 
-            Flowcell flowcell = sample.getFlowcell();
             File necAlignmentDirectory = new File(sample.getOutputDirectory(), "NECAlignment");
             File necVariantCallingDirectory = new File(sample.getOutputDirectory(), "NECVariantCalling");
+            File necIDCheckDirectory = new File(sample.getOutputDirectory(), "NECIDCheck");
             File tmpDirectory = new File(sample.getOutputDirectory(), "tmp");
             tmpDirectory.mkdirs();
-
-            List<File> readPairList = WorkflowUtil.getReadPairList(sample.getFileDatas(), flowcell.getName(),
-                    sample.getLaneIndex());
-
-            // error check
-            if (readPairList.size() != 2) {
-                logger.warn("readPairList.size(): {}", readPairList.size());
-                throw new WorkflowException("Read pair not found");
-            }
-
-            // fastq file names
-            File r1FastqFile = readPairList.get(0);
-            File r2FastqFile = readPairList.get(1);
 
             try {
 
@@ -170,56 +157,95 @@ public class NECSymlinkWorkflow extends AbstractSampleWorkflow {
 
                 String format = "%s,%s";
                 List<String> targetLinkPairList = new ArrayList<String>();
-                File fastqR1Symlink = new File(sequenceProjDirectory, r1FastqFile.getName());
-                targetLinkPairList.add(String.format(format, r1FastqFile.getAbsolutePath(),
-                        fastqR1Symlink.getAbsolutePath()));
-                File fastqR2Symlink = new File(sequenceProjDirectory, r2FastqFile.getName());
-                targetLinkPairList.add(String.format(format, r2FastqFile.getAbsolutePath(),
-                        fastqR2Symlink.getAbsolutePath()));
 
-                // cycle through all files in the analysisWorkflowDirectory
-                for (File f : necAlignmentDirectory.listFiles()) {
-                    String fname = f.getName();
+                Set<FileData> sampleFileDatas = sample.getFileDatas();
+                for (FileData fd : sampleFileDatas) {
 
-                    if (fname.endsWith("fastqc.zip")) {
+                    File f = new File(fd.getPath(), fd.getName());
 
-                        File targetFile = new File(sequenceProjDirectory, fname);
-                        targetLinkPairList
-                                .add(String.format(format, f.getAbsolutePath(), targetFile.getAbsolutePath()));
+                    if (!f.exists()) {
+                        throw new WorkflowException(String.format("File does not exist: %s", f.getAbsolutePath()));
+                    }
 
-                    } else if (fname.endsWith("fixed-rg.bam") || fname.endsWith("fixed-rg.bai")) {
+                    if (fd.getMimeType().equals(MimeType.FASTQ) && fd.getName().endsWith("_R1.fastq.gz")) {
+                        File symlink = new File(sequenceProjDirectory, fd.getName());
+                        targetLinkPairList.add(String.format(format, f.getAbsolutePath(), symlink.getAbsolutePath()));
+                    }
 
-                        File targetFile = new File(alignmentProjDirectory, fname);
-                        targetLinkPairList
-                                .add(String.format(format, f.getAbsolutePath(), targetFile.getAbsolutePath()));
+                    if (fd.getMimeType().equals(MimeType.FASTQ) && fd.getName().endsWith("_R2.fastq.gz")) {
+                        File symlink = new File(sequenceProjDirectory, fd.getName());
+                        targetLinkPairList.add(String.format(format, f.getAbsolutePath(), symlink.getAbsolutePath()));
+                    }
 
-		    }
-                }
+                    if (fd.getMimeType().equals(MimeType.APPLICATION_BAM) && fd.getName().endsWith(".fixed-rg.bam")) {
+                        File symlink = new File(alignmentProjDirectory, fd.getName());
+                        targetLinkPairList.add(String.format(format, f.getAbsolutePath(), symlink.getAbsolutePath()));
+                    }
 
-                for (File f : necVariantCallingDirectory.listFiles()) {
-                    String fname = f.getName();
-                    
-		    if (fname.contains(".coverage.") || fname.endsWith("flagstat")) {
+                    if (fd.getMimeType().equals(MimeType.APPLICATION_BAM_INDEX)
+                            && fd.getName().endsWith(".fixed-rg.bai")) {
+                        File symlink = new File(alignmentProjDirectory, fd.getName());
+                        targetLinkPairList.add(String.format(format, f.getAbsolutePath(), symlink.getAbsolutePath()));
+                    }
 
-                        File targetFile = new File(alignmentStatProjDirectory, fname);
-                        targetLinkPairList
-                                .add(String.format(format, f.getAbsolutePath(), targetFile.getAbsolutePath()));
-
-                    } else if (fname.endsWith("fvcf")) {
-
-                        File targetFile = new File(idchkFVCFProjDirectory, fname);
-                        targetLinkPairList
-                                .add(String.format(format, f.getAbsolutePath(), targetFile.getAbsolutePath()));
-
-                    } else if (fname.endsWith("ec.tsv")) {
-
-                        File targetFile = new File(idchkECProjDirectory, fname);
-                        targetLinkPairList
-                                .add(String.format(format, f.getAbsolutePath(), targetFile.getAbsolutePath()));
-
+                    if (fd.getMimeType().equals(MimeType.TEXT_STAT_SUMMARY)
+                            && fd.getName().endsWith(".realign.fix.pr.flagstat")) {
+                        File symlink = new File(alignmentProjDirectory, fd.getName());
+                        targetLinkPairList.add(String.format(format, f.getAbsolutePath(), symlink.getAbsolutePath()));
                     }
 
                 }
+
+                String r1ZipFileName = String.format("%s_%s_L%03d_R1.fastqc.zip", sample.getFlowcell().getName(),
+                        sample.getBarcode(), sample.getLaneIndex());
+                File r1FastQCZipFile = new File(necAlignmentDirectory, r1ZipFileName);
+                if (!r1FastQCZipFile.exists()) {
+                    throw new WorkflowException(String.format("File does not exist: %s",
+                            r1FastQCZipFile.getAbsolutePath()));
+                }
+                File r1FastQCZipSymlink = new File(sequenceProjDirectory, r1ZipFileName);
+                targetLinkPairList.add(String.format(format, r1FastQCZipFile.getAbsolutePath(),
+                        r1FastQCZipSymlink.getAbsolutePath()));
+
+                String r2ZipFileName = String.format("%s_%s_L%03d_R1.fastqc.zip", sample.getFlowcell().getName(),
+                        sample.getBarcode(), sample.getLaneIndex());
+                File r2FastQCZipFile = new File(necAlignmentDirectory, r2ZipFileName);
+                if (!r2FastQCZipFile.exists()) {
+                    throw new WorkflowException(String.format("File does not exist: %s",
+                            r2FastQCZipFile.getAbsolutePath()));
+                }
+                File r2FastQCZipSymlink = new File(sequenceProjDirectory, r2ZipFileName);
+                targetLinkPairList.add(String.format(format, r2FastQCZipFile.getAbsolutePath(),
+                        r2FastQCZipSymlink.getAbsolutePath()));
+
+                // cycle through all files in the necVariantCallingDirectory
+                for (File f : necVariantCallingDirectory.listFiles()) {
+                    if (f.getName().contains(".coverage.")) {
+                        File targetFile = new File(alignmentStatProjDirectory, f.getName());
+                        targetLinkPairList
+                                .add(String.format(format, f.getAbsolutePath(), targetFile.getAbsolutePath()));
+                    }
+                }
+
+                String ecTSVFileName = String.format("%s_%s_L%03d.fixed-rg.deduped.realign.fix.pr.ec.tsv", sample
+                        .getFlowcell().getName(), sample.getBarcode(), sample.getLaneIndex());
+                File ecTSVFile = new File(necIDCheckDirectory, ecTSVFileName);
+                if (!ecTSVFile.exists()) {
+                    throw new WorkflowException(String.format("File does not exist: %s", ecTSVFile.getAbsolutePath()));
+                }
+                File ecTSVSymlink = new File(idchkFVCFProjDirectory, ecTSVFileName);
+                targetLinkPairList.add(String.format(format, ecTSVFile.getAbsolutePath(),
+                        ecTSVSymlink.getAbsolutePath()));
+
+                String fVCFFileName = String.format("%s_%s_L%03d.fixed-rg.deduped.realign.fix.pr.fvcf", sample
+                        .getFlowcell().getName(), sample.getBarcode(), sample.getLaneIndex());
+                File fVCFFile = new File(necIDCheckDirectory, fVCFFileName);
+                if (!fVCFFile.exists()) {
+                    throw new WorkflowException(String.format("File does not exist: %s", fVCFFile.getAbsolutePath()));
+                }
+                File fVCFSymlink = new File(idchkFVCFProjDirectory, ecTSVFileName);
+                targetLinkPairList
+                        .add(String.format(format, fVCFFile.getAbsolutePath(), fVCFSymlink.getAbsolutePath()));
 
                 // new job
                 CondorJobBuilder builder = WorkflowJobFactory
