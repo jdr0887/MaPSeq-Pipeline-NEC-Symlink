@@ -18,12 +18,12 @@ import edu.unc.mapseq.dao.SampleDAO;
 import edu.unc.mapseq.dao.model.FileData;
 import edu.unc.mapseq.dao.model.Sample;
 
-@Command(scope = "nec-ic", name = "fix-workflow-files", description = "Fix workflow files")
+@Command(scope = "nec-symlink", name = "fix-workflow-files", description = "Fix workflow files")
 public class FixWorkflowFilesAction extends AbstractAction {
 
     private final Logger logger = LoggerFactory.getLogger(FixWorkflowFilesAction.class);
 
-    @Argument(index = 1, name = "sampleId", description = "sampleId", required = true, multiValued = false)
+    @Argument(index = 0, name = "sampleId", description = "sampleId", required = true, multiValued = false)
     private Long sampleId;
 
     private MaPSeqDAOBean maPSeqDAOBean;
