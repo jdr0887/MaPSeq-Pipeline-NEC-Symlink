@@ -2,13 +2,13 @@
   <parent>
     <groupId>edu.unc.mapseq.pipelines</groupId>
     <artifactId>nec-symlink</artifactId>
-    <version>0.5.19</version>
+    <version>0.5.20-SNAPSHOT</version>
   </parent>
   <name>MaPSeq :: Pipelines :: NEC Symlink :: Features</name>
   <modelVersion>4.0.0</modelVersion>
   <groupId>edu.unc.mapseq.pipelines.nec-symlink</groupId>
   <artifactId>nec-symlink-features</artifactId>
-  <version>0.5.19</version>
+  <version>0.5.20-SNAPSHOT</version>
   <packaging>pom</packaging>
   <build>
     <plugins>
