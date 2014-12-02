@@ -163,33 +163,44 @@ public class NECSymlinkWorkflow extends AbstractSampleWorkflow {
 
                     File f = new File(fd.getPath(), fd.getName());
 
-                    if (!f.exists()) {
-                        throw new WorkflowException(String.format("File does not exist: %s", f.getAbsolutePath()));
-                    }
-
                     if (fd.getMimeType().equals(MimeType.FASTQ) && fd.getName().endsWith("_R1.fastq.gz")) {
+                        if (!f.exists()) {
+                            throw new WorkflowException(String.format("File does not exist: %s", f.getAbsolutePath()));
+                        }
                         File symlink = new File(sequenceProjDirectory, fd.getName());
                         targetLinkPairList.add(String.format(format, f.getAbsolutePath(), symlink.getAbsolutePath()));
                     }
 
                     if (fd.getMimeType().equals(MimeType.FASTQ) && fd.getName().endsWith("_R2.fastq.gz")) {
+                        if (!f.exists()) {
+                            throw new WorkflowException(String.format("File does not exist: %s", f.getAbsolutePath()));
+                        }
                         File symlink = new File(sequenceProjDirectory, fd.getName());
                         targetLinkPairList.add(String.format(format, f.getAbsolutePath(), symlink.getAbsolutePath()));
                     }
 
                     if (fd.getMimeType().equals(MimeType.APPLICATION_BAM) && fd.getName().endsWith(".fixed-rg.bam")) {
+                        if (!f.exists()) {
+                            throw new WorkflowException(String.format("File does not exist: %s", f.getAbsolutePath()));
+                        }
                         File symlink = new File(alignmentProjDirectory, fd.getName());
                         targetLinkPairList.add(String.format(format, f.getAbsolutePath(), symlink.getAbsolutePath()));
                     }
 
                     if (fd.getMimeType().equals(MimeType.APPLICATION_BAM_INDEX)
                             && fd.getName().endsWith(".fixed-rg.bai")) {
+                        if (!f.exists()) {
+                            throw new WorkflowException(String.format("File does not exist: %s", f.getAbsolutePath()));
+                        }
                         File symlink = new File(alignmentProjDirectory, fd.getName());
                         targetLinkPairList.add(String.format(format, f.getAbsolutePath(), symlink.getAbsolutePath()));
                     }
 
                     if (fd.getMimeType().equals(MimeType.TEXT_STAT_SUMMARY)
                             && fd.getName().endsWith(".realign.fix.pr.flagstat")) {
+                        if (!f.exists()) {
+                            throw new WorkflowException(String.format("File does not exist: %s", f.getAbsolutePath()));
+                        }
                         File symlink = new File(alignmentProjDirectory, fd.getName());
                         targetLinkPairList.add(String.format(format, f.getAbsolutePath(), symlink.getAbsolutePath()));
                     }
