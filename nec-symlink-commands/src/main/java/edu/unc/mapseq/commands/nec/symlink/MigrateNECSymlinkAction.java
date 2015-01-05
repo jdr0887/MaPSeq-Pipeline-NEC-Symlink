@@ -23,7 +23,7 @@ import edu.unc.mapseq.dao.StudyDAO;
 import edu.unc.mapseq.dao.model.Flowcell;
 import edu.unc.mapseq.dao.model.Sample;
 import edu.unc.mapseq.dao.model.Study;
-import edu.unc.mapseq.workflow.WorkflowUtil;
+import edu.unc.mapseq.workflow.impl.WorkflowUtil;
 
 @Command(scope = "nec-symlink", name = "migrate", description = "Migrate NEC Symlink")
 public class MigrateNECSymlinkAction extends AbstractAction {
